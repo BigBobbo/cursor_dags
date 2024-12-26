@@ -1,0 +1,34 @@
+# Data cleaning parameters
+cleaning_steps:
+  clean_date: true
+  clean_grade: true
+  clean_position: true
+  clean_weight: true
+  clean_distance: true
+
+# Feature engineering parameters
+feature_engineering:
+  previous_race_count: true
+  previous_grade_race_count: true
+  win_rate:
+    enabled: true
+    lookback: 5
+  average_position:
+    enabled: true
+    lookback: 5
+  weight_analysis:
+    enabled: true
+    lookback: 5
+  distance_analysis:
+    enabled: true
+    lookback: 5
+    min_races: 3
+
+# Column mappings
+columns:
+  greyhound: "greyhound"
+  position: "position"
+  grade: "grade"
+  date: "date"
+  weight: "wt"
+  race_name: "race_name" 
