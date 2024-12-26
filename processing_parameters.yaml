@@ -27,7 +27,7 @@ feature_engineering:
 # Column mappings
 columns:
   greyhound: "greyhound"
-  position: "position"
+  position: "pos"
   grade: "grade"
   date: "date"
   weight: "wt"
