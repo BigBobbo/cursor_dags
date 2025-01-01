@@ -213,6 +213,33 @@ def clean_est_time_column(df: pd.DataFrame, est_time_col: str = 'est_time') -> p
     
     return df
 
+def clean_race_name_column(df: pd.DataFrame, race_name_col: str = 'race_name') -> pd.DataFrame:
+    """
+    Extracts race number and grade from race name.
+    Example: "Race 1 - The Hertel (Ireland) Ltd. 525 (Grade : A5/6)" 
+    becomes race_number=1, race_grade="A5/6"
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame containing race data
+        race_name_col (str): Name of the column containing race names
+        
+    Returns:
+        pd.DataFrame: DataFrame with extracted race number and grade columns
+    """
+    df = df.copy()
+    
+    # Extract race number (looks for "Race X" pattern at start)
+    df['race_number'] = df[race_name_col].str.extract(r'Race\s+(\d+)').astype('Int64')
+    
+    # Extract grade (looks for pattern "(Grade : X)" or similar)
+    df['race_grade'] = df[race_name_col].str.extract(r'\(Grade\s*:\s*([^\)]+)\)')
+    
+    # Clean the extracted grade
+    if 'race_grade' in df.columns:
+        df['race_grade'] = df['race_grade'].str.strip()
+    
+    return df
+
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Applies all cleaning functions to the DataFrame.

@@ -25,7 +25,8 @@ from data_cleaning_functions import (
     clean_weight_column,
     clean_race_distance,
     clean_grade_column,
-    clean_est_time_column
+    clean_est_time_column,
+    clean_race_name_column
 )
 
 def setup_logging():
@@ -68,9 +69,17 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         logging.info("Cleaning race distance...")
         df = clean_race_distance(df, col_map['race_name'])
     
+    if params['cleaning_steps']['clean_distance']:
+        logging.info("Cleaning going column...")
+        df = clean_going_column(df, col_map['going'])
+
     if params['cleaning_steps']['clean_est_time']:
         logging.info("Cleaning estimated time...")
         df = clean_est_time_column(df, col_map['est_time'])
+    
+    if params['cleaning_steps']['clean_race_name']:
+        logging.info("Extracting race number and grade from race name...")
+        df = clean_race_name_column(df, col_map['race_name'])
     
     
     # Only remove invalid positions if specified in parameters

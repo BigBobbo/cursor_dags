@@ -6,6 +6,7 @@ cleaning_steps:
   clean_weight: true
   clean_distance: true
   clean_est_time: true
+  clean_race_name: true
 
 # Feature engineering parameters
 feature_engineering:
@@ -37,3 +38,4 @@ columns:
   weight: "wt"
   race_name: "race_name"
   est_time: "est_time" 
+  going: "going"
