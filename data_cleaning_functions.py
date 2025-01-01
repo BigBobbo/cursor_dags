@@ -25,7 +25,7 @@ def clean_date_column(df: pd.DataFrame, date_col: str = 'date') -> pd.DataFrame:
 def clean_position_column(df: pd.DataFrame, pos_col: str = 'pos') -> pd.DataFrame:
     """
     Cleans the position column by removing trailing periods and converting to integer.
-    Handles empty strings and invalid values by setting them to NaN.
+    Handles empty strings, invalid values, and numeric inputs by setting them to NaN.
     
     Args:
         df (pd.DataFrame): Input DataFrame containing race data
@@ -37,8 +37,14 @@ def clean_position_column(df: pd.DataFrame, pos_col: str = 'pos') -> pd.DataFram
     # Create a copy to avoid the SettingWithCopyWarning
     df = df.copy()
     
-    # Handle empty strings and convert to numeric, setting invalid values to NaN
-    df['clean_position'] = (df[pos_col]
+    # Convert the position column to string first, handling NaN values
+    df['clean_position'] = df[pos_col].astype(str)
+    
+    # Replace 'nan' strings with empty string
+    df.loc[df['clean_position'] == 'nan', 'clean_position'] = ''
+    
+    # Now clean the string values
+    df['clean_position'] = (df['clean_position']
                           .str.replace('.', '', regex=False)  # Remove periods
                           .str.strip()  # Remove whitespace
                           .replace('', pd.NA)  # Replace empty strings with NA

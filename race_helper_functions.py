@@ -197,56 +197,101 @@ def calculate_preferred_distance(df: pd.DataFrame, dog_col: str,
     """
     Identifies each dog's preferred racing distance based on previous performance.
     Only uses historical data (where position is not null) to determine preferences.
+    If a dog doesn't have enough races at any distance, uses stats from all distances.
+    Handles both historical analysis and future predictions.
     """
     df = df.copy()
+    df = df.sort_values('clean_date')  # Ensure data is sorted by date
     
-    # Get only historical races (where position is not null)
-    historical_mask = df[position_col].notna()
-    historical_data = df[historical_mask].copy()
+    # Initialize columns with None
+    for col in [f'{distance_col}_preferred', 'avg_position_preferred', 'win_rate_preferred']:
+        df[col] = None
     
-    # Create a shifted position column for calculations
-    historical_data['previous_position'] = historical_data.groupby(dog_col)[position_col].shift()
-    historical_data['previous_is_win'] = (historical_data['previous_position'] == 1).astype(float)
-    
-    # Calculate stats using only historical races
-    distance_stats = (historical_data.groupby([dog_col, distance_col])
-                     .agg({
-                         'previous_position': ['count', 'mean'],
-                         'previous_is_win': 'mean'
-                     })
-                     .reset_index())
-    
-    # Rename columns
-    distance_stats.columns = [dog_col, distance_col, 'total_races', 'avg_position', 'win_rate']
-    
-    # Filter for distances with minimum number of races
-    qualified_distances = distance_stats[distance_stats['total_races'] >= min_races]
-    
-    # Find best distance based on average position
-    best_distances = (qualified_distances
-                     .sort_values('avg_position')
-                     .groupby(dog_col)
-                     .first()
-                     .reset_index())
-    
-    # Rename columns to indicate these are preferred stats
-    best_distances = best_distances.rename(columns={
-        distance_col: f'{distance_col}_preferred',
-        'avg_position': 'avg_position_preferred',
-        'win_rate': 'win_rate_preferred'
-    })
-    
-    # Merge best distance information back to original dataframe
-    df = df.merge(
-        best_distances[[
-            dog_col,
-            f'{distance_col}_preferred',
-            'avg_position_preferred',
-            'win_rate_preferred'
-        ]],
-        on=dog_col,
-        how='left'
-    )
+    # Process each race date
+    for date in df['clean_date'].unique():
+        # Get historical data up to this date
+        historical_mask = (df['clean_date'] < date) & (df[position_col].notna())
+        historical_data = df[historical_mask].copy()
+        
+        # Get current date's dogs
+        current_dogs = df[df['clean_date'] == date][dog_col].unique()
+        
+        if len(historical_data) == 0:
+            continue
+        
+        # Create shifted position column for calculations
+        historical_data['previous_position'] = historical_data.groupby(dog_col)[position_col].shift()
+        historical_data['previous_is_win'] = (historical_data['previous_position'] == 1).astype(float)
+        
+        # Calculate stats using only historical races
+        distance_stats = (historical_data.groupby([dog_col, distance_col])
+                         .agg({
+                             'previous_position': ['count', 'mean'],
+                             'previous_is_win': 'mean'
+                         })
+                         .reset_index())
+        
+        # Rename columns
+        distance_stats.columns = [dog_col, distance_col, 'total_races', 'avg_position', 'win_rate']
+        
+        # Find best distance based on average position for dogs with enough races
+        qualified_distances = distance_stats[distance_stats['total_races'] >= min_races]
+        best_distances = (qualified_distances
+                         .sort_values('avg_position')
+                         .groupby(dog_col)
+                         .first()
+                         .reset_index())
+        
+        # For dogs without enough races at any distance, use stats from all distances combined
+        qualified_dogs = set(best_distances[dog_col])
+        unqualified_dogs = set(current_dogs) - qualified_dogs
+        
+        if unqualified_dogs:
+            # Calculate overall stats for each unqualified dog
+            overall_stats = (historical_data[historical_data[dog_col].isin(unqualified_dogs)]
+                           .groupby(dog_col)
+                           .agg({
+                               distance_col: 'first',
+                               'previous_position': 'mean',
+                               'previous_is_win': 'mean'
+                           })
+                           .reset_index())
+            
+            # Format unqualified dogs' stats
+            unqualified_stats = overall_stats.rename(columns={
+                distance_col: f'{distance_col}_preferred',
+                'previous_position': 'avg_position_preferred',
+                'previous_is_win': 'win_rate_preferred'
+            })
+            
+            # Format qualified dogs' stats
+            best_distances = best_distances.rename(columns={
+                distance_col: f'{distance_col}_preferred',
+                'avg_position': 'avg_position_preferred',
+                'win_rate': 'win_rate_preferred'
+            })
+            
+            # Combine stats
+            best_distances = pd.concat([best_distances, unqualified_stats], ignore_index=True)
+        else:
+            # Rename columns for qualified dogs
+            best_distances = best_distances.rename(columns={
+                distance_col: f'{distance_col}_preferred',
+                'avg_position': 'avg_position_preferred',
+                'win_rate': 'win_rate_preferred'
+            })
+        
+        # Drop the total_races column if it exists
+        if 'total_races' in best_distances.columns:
+            best_distances = best_distances.drop('total_races', axis=1)
+        
+        # Update the values for this date's races
+        date_mask = df['clean_date'] == date
+        df.loc[date_mask, [f'{distance_col}_preferred', 'avg_position_preferred', 'win_rate_preferred']] = (
+            df[date_mask][[dog_col]].merge(best_distances, on=dog_col, how='left')
+            [[f'{distance_col}_preferred', 'avg_position_preferred', 'win_rate_preferred']]
+            .values
+        )
     
     # Calculate if current race is at preferred distance
     df['is_preferred_distance'] = (
