@@ -169,6 +169,31 @@ def clean_race_distance(df: pd.DataFrame, race_name_col: str = 'race_name') -> p
     df['clean_distance'] = df[race_name_col].apply(extract_distance)
     return df
 
+def clean_grade_column(df: pd.DataFrame, grade_col: str = 'grade') -> pd.DataFrame:
+    """
+    Cleans and standardizes grade column values.
+    Handles common grade formats (A1, A2, etc.) and variations.
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame containing race data
+        grade_col (str): Name of the column containing grade information
+        
+    Returns:
+        pd.DataFrame: DataFrame with cleaned grade column
+    """
+    df = df.copy()
+    
+    # Convert to string and uppercase
+    df['clean_grade'] = df[grade_col].astype(str).str.upper()
+    
+    # Remove any whitespace
+    df['clean_grade'] = df['clean_grade'].str.strip()
+    
+    # Handle invalid or missing grades
+    df.loc[df['clean_grade'].isin(['NAN', 'NONE', '']), 'clean_grade'] = pd.NA
+    
+    return df
+
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Applies all cleaning functions to the DataFrame.

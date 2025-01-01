@@ -20,9 +20,11 @@ from race_helper_functions import (
 from data_cleaning_functions import (
     clean_date_column,
     clean_position_column,
+    clean_grade_column,
     clean_going_column,
     clean_weight_column,
-    clean_race_distance
+    clean_race_distance,
+    clean_grade_column
 )
 
 def setup_logging():
@@ -51,9 +53,7 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     
     if params['cleaning_steps']['clean_grade']:
         logging.info("Cleaning grade column...")
-        # Note: Since there's no grade cleaning function, you might want to add one
-        # or remove this step from the parameters file
-        pass
+        df = clean_grade_column(df, col_map['grade'])
     
     if params['cleaning_steps']['clean_position']:
         logging.info("Cleaning position column...")
@@ -80,7 +80,7 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         df = add_previous_grade_race_count(
             df, 
             col_map['greyhound'], 
-            col_map['grade'],  # You might want to add grade cleaning and use 'clean_grade'
+            col_map['clean_grade'],
             'previous_grade_race_count'
         )
     
