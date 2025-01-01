@@ -26,46 +26,61 @@ def create_identifiers(df: pd.DataFrame) -> pd.DataFrame:
     
     return df
 
-def filter_ml_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
+def filter_ml_features(df: pd.DataFrame, approved_features_file: str = 'approved_features.yaml') -> Tuple[pd.DataFrame, List[str]]:
     """
-    Remove columns that cannot be used in ML model and return filtered DataFrame
-    and list of kept columns.
+    Filter DataFrame to only include approved features from YAML file.
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame containing all columns
+        approved_features_file (str): Path to YAML file containing approved feature list
+        
+    Returns:
+        Tuple[pd.DataFrame, List[str]]: Filtered DataFrame and list of kept columns
     """
     df = df.copy()
     
-    # Columns to drop (add any additional columns that shouldn't be used for ML)
-    drop_columns = [
-        # Identifier columns
-        'race_id', 'unique_id', 'greyhound', 'track', 'race_number',
-        
-        # Date columns (already used in race_id)
-        'date', 'clean_date',
-        
-        # Text columns
-        'race_name', 'grade',
-        
-        # Original columns that have been cleaned
-        'pos', 'wt',
-        
-        # Target column
-        'est_time'
-    ]
+    # Load approved features from YAML
+    logging.info(f"Loading approved features from {approved_features_file}")
+    with open(approved_features_file, 'r') as f:
+        approved_features = yaml.safe_load(f)['features']
     
-    # Drop columns that exist in the DataFrame
-    columns_to_drop = [col for col in drop_columns if col in df.columns]
-    df_filtered = df.drop(columns=columns_to_drop)
+    logging.info(f"Found {len(approved_features)} approved features in YAML file")
     
-    # Get remaining columns (features to use in ML)
-    kept_columns = df_filtered.columns.tolist()
+    # Get list of available approved features
+    available_features = [col for col in approved_features if col in df.columns]
+    missing_features = [col for col in approved_features if col not in df.columns]
     
-    # Remove any remaining non-numeric columns
+    if missing_features:
+        logging.warning(f"Missing approved features: {missing_features}")
+    logging.info(f"Found {len(available_features)} approved features in DataFrame")
+    
+    # Filter DataFrame to only include available approved features
+    df_filtered = df[available_features]
+    
+    # Check data types and log details about non-numeric columns
+    for col in available_features:
+        dtype = df_filtered[col].dtype
+        logging.debug(f"Column '{col}' has dtype: {dtype}")
+    
+    # Identify non-numeric columns
     non_numeric_cols = df_filtered.select_dtypes(exclude=['int64', 'float64', 'Int64']).columns
     if len(non_numeric_cols) > 0:
-        logging.warning(f"Removing non-numeric columns: {non_numeric_cols.tolist()}")
+        logging.warning("The following columns will be dropped due to non-numeric dtype:")
+        for col in non_numeric_cols:
+            logging.warning(f"  - '{col}' (dtype: {df_filtered[col].dtype})")
+            # Optional: show some unique values to help debugging
+            unique_values = df_filtered[col].unique()[:5]  # Show first 5 unique values
+            logging.warning(f"    Example values: {unique_values}")
+        
         df_filtered = df_filtered.drop(columns=non_numeric_cols)
-        kept_columns = [col for col in kept_columns if col not in non_numeric_cols]
+        available_features = [col for col in available_features if col not in non_numeric_cols]
     
-    return df_filtered, kept_columns
+    logging.info(f"Final feature count: {len(available_features)}")
+    logging.info("Kept features:")
+    for feature in available_features:
+        logging.info(f"  - {feature} (dtype: {df_filtered[feature].dtype})")
+    
+    return df_filtered, available_features
 
 def save_ml_data(df: pd.DataFrame, target_col: str = 'est_time', 
                 output_dir: str = 'ml_data') -> None:

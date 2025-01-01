@@ -1,0 +1,24 @@
+# Features approved for ML model use
+features:
+  - win_time
+  - sp
+  - clean_position
+  - clean_weight
+  - clean_distance
+  - clean_going
+  - clean_est_time
+  - previous_race
+  - previous_grade_race_count
+  - win_rate
+  - avg_position
+  - weight_change
+  - weight_change_pct
+  - avg_weight
+  - weight_dev_from_avg
+  - avg_position_at_distance
+  - win_rate_at_distance
+  - races_at_distance
+  - clean_distance_preferred
+  - avg_position_preferred
+  - win_rate_preferred
+  - is_preferred_distance 
