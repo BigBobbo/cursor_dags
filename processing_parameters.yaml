@@ -5,6 +5,7 @@ cleaning_steps:
   clean_position: true
   clean_weight: true
   clean_distance: true
+  clean_est_time: true
 
 # Feature engineering parameters
 feature_engineering:
@@ -24,6 +25,9 @@ feature_engineering:
     lookback: 5
     min_races: 3
 
+# Row filtering
+remove_invalid_positions: false  # Set to true if you want to remove rows with invalid positions
+
 # Column mappings
 columns:
   greyhound: "greyhound"
@@ -31,4 +35,5 @@ columns:
   grade: "grade"
   date: "date"
   weight: "wt"
-  race_name: "race_name" 
+  race_name: "race_name"
+  est_time: "est_time" 

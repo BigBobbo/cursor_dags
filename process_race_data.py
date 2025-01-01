@@ -24,7 +24,8 @@ from data_cleaning_functions import (
     clean_going_column,
     clean_weight_column,
     clean_race_distance,
-    clean_grade_column
+    clean_grade_column,
+    clean_est_time_column
 )
 
 def setup_logging():
@@ -67,8 +68,19 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         logging.info("Cleaning race distance...")
         df = clean_race_distance(df, col_map['race_name'])
     
-    # Remove rows with invalid positions before feature engineering
-    df = df[df['clean_position'].notna()]
+    if params['cleaning_steps']['clean_est_time']:
+        logging.info("Cleaning estimated time...")
+        df = clean_est_time_column(df, col_map['est_time'])
+    
+    
+    # Only remove invalid positions if specified in parameters
+    if params.get('remove_invalid_positions', False):
+        initial_count = len(df)
+        df = df[df['clean_est_time'].notna()]
+        rows_dropped = initial_count - len(df)
+        logging.info(f"Removed {rows_dropped} rows with invalid positions")
+        logging.info(f"Remaining rows: {len(df)}")
+    
     
     # Apply feature engineering using cleaned columns
     if params['feature_engineering']['previous_race_count']:
@@ -80,7 +92,7 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         df = add_previous_grade_race_count(
             df, 
             col_map['greyhound'], 
-            col_map['clean_grade'],
+            'clean_grade',
             'previous_grade_race_count'
         )
     
