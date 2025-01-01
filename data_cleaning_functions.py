@@ -194,6 +194,25 @@ def clean_grade_column(df: pd.DataFrame, grade_col: str = 'grade') -> pd.DataFra
     
     return df
 
+def clean_est_time_column(df: pd.DataFrame, est_time_col: str = 'est_time') -> pd.DataFrame:
+    """
+    Cleans estimated time column by converting to float values in seconds.
+    Handles missing values and invalid formats.
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame containing race data
+        est_time_col (str): Name of the column containing estimated time information
+        
+    Returns:
+        pd.DataFrame: DataFrame with cleaned estimated time column
+    """
+    df = df.copy()
+    
+    # Convert estimated time to numeric, handling invalid values
+    df['clean_est_time'] = pd.to_numeric(df[est_time_col], errors='coerce')
+    
+    return df
+
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Applies all cleaning functions to the DataFrame.
