@@ -1,12 +1,12 @@
 # Features approved for ML model use
 features:
-  - win_time
-  - sp
-  - clean_position
+  # - win_time
+  # - sp
+  # - clean_position
   - clean_weight
   - clean_distance
-  - clean_going
-  - clean_est_time
+  # - clean_going
+  # - clean_est_time
   - previous_race
   - previous_grade_race_count
   - win_rate
@@ -21,4 +21,52 @@ features:
   - clean_distance_preferred
   - avg_position_preferred
   - win_rate_preferred
-  - is_preferred_distance 
+  - is_preferred_distance
+
+# Feature median values for filling NaNs
+feature_medians:
+  clean_weight: 65.5
+  previous_race: 2.0
+  weight_change: -0.5
+  # ... other medians will be added here automatically ...
+
+# Model training parameters
+training:
+  # Cross-validation strategy (random, random_races, chronological)
+  cv_strategy: random_races
+  
+  # Number of folds for cross-validation
+  n_folds: 5
+  
+  # Test set size (proportion of data)
+  test_size: 0.2
+  
+  # Random seed for reproducibility
+  random_seed: 42
+
+# XGBoost hyperparameter search space
+hyperparameters:
+  n_estimators:
+    min: 100
+    max: 1000
+  max_depth:
+    min: 3
+    max: 10
+  learning_rate:
+    min: 0.01
+    max: 0.3
+  subsample:
+    min: 0.5
+    max: 1.0
+  colsample_bytree:
+    min: 0.5
+    max: 1.0
+  min_child_weight:
+    min: 1
+    max: 7
+
+# RandomizedSearchCV parameters
+search:
+  n_iter: 100  # Number of parameter combinations to try
+  cv: 5        # Number of cross-validation folds
+  n_jobs: -1   # Number of parallel jobs (-1 means use all processors) 

@@ -103,7 +103,7 @@ def save_ml_data(df: pd.DataFrame, target_col: str = 'est_time',
         raise ValueError(f"Target column '{target_col}' not found in DataFrame")
     
     # Extract target
-    target = df[['unique_id', 'race_id', target_col]]
+    target = df[['unique_id', 'race_id', 'clean_position', target_col]]
     
     # Filter features
     features, feature_columns = filter_ml_features(df)

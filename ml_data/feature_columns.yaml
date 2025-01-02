@@ -1,0 +1,13 @@
+- win_time
+- clean_position
+- clean_weight
+- clean_distance
+- clean_going
+- clean_est_time
+- previous_race
+- win_rate
+- avg_position
+- weight_change
+- weight_change_pct
+- avg_weight
+- weight_dev_from_avg
