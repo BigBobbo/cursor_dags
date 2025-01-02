@@ -30,6 +30,12 @@ feature_medians:
   weight_change: -0.5
   # ... other medians will be added here automatically ...
 
+# Add new section for target variable handling
+target:
+  missing_value: '-'
+  missing_strategy: 'drop'  # Options: 'drop' or 'fill'
+  fill_value: null  # Only used if missing_strategy is 'fill'
+
 # Model training parameters
 training:
   # Cross-validation strategy (random, random_races, chronological)

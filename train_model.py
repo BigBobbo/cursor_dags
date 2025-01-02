@@ -204,6 +204,25 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
         scoring='neg_mean_squared_error'
     )
     
+    # Handle missing values in target variable
+    if 'target' in config:
+        missing_value = config['target'].get('missing_value', '-')
+        missing_strategy = config['target'].get('missing_strategy', 'drop')
+        
+        # Replace '-' with NaN
+        y_train = y_train.replace(missing_value, np.nan)
+        
+        if missing_strategy == 'drop':
+            # Get indices of non-null values
+            valid_indices = y_train[~y_train.isna()].index
+            # Filter both X and y
+            X_train = X_train.loc[valid_indices]
+            y_train = y_train.loc[valid_indices]
+            if groups is not None:
+                groups = groups.loc[valid_indices]
+        elif missing_strategy == 'fill' and config['target'].get('fill_value') is not None:
+            y_train = y_train.fillna(config['target']['fill_value'])
+    
     # Fit model
     logging.info("Starting model training...")
     if config['training']['cv_strategy'] == 'random_races':
