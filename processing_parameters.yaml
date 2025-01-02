@@ -11,19 +11,20 @@ cleaning_steps:
 # Feature engineering parameters
 feature_engineering:
   previous_race_count: true
-  previous_grade_race_count: true
+  previous_same_race_grade_count: true
+  previous_same_dog_grade_count: true
   win_rate:
     enabled: true
-    lookback: 5
+    lookback: false
   average_position:
     enabled: true
-    lookback: 5
+    lookback: false
   weight_analysis:
     enabled: true
-    lookback: 5
+    lookback: false
   distance_analysis:
     enabled: true
-    lookback: 5
+    lookback: false
     min_races: 3
 
 # Row filtering

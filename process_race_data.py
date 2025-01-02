@@ -96,13 +96,22 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
         logging.info("Adding previous race count...")
         df = add_previous_race_count(df, col_map['greyhound'])
     
-    if params['feature_engineering']['previous_grade_race_count']:
+    if params['feature_engineering']['previous_same_dog_grade_count']:
         logging.info("Adding previous grade race count...")
         df = add_previous_grade_race_count(
             df, 
             col_map['greyhound'], 
             'clean_grade',
-            'previous_grade_race_count'
+            'previous_same_dog_grade_count'
+        )
+
+    if params['feature_engineering']['previous_same_race_grade_count']:
+        logging.info("Adding previous grade race count...")
+        df = add_previous_grade_race_count(
+            df, 
+            col_map['greyhound'], 
+            'race_grade',
+            'previous_same_race_grade_count'
         )
     
     if params['feature_engineering']['win_rate']['enabled']:
@@ -136,16 +145,35 @@ def process_data(df: pd.DataFrame, params: dict) -> pd.DataFrame:
     if params['feature_engineering']['distance_analysis']['enabled']:
         logging.info("Calculating distance-related features...")
         if df['clean_distance'].notna().any():
-            df = calculate_distance_performance(
+            df = add_previous_race_count(
                 df,
                 col_map['greyhound'],
+                group_col='clean_distance'
+            )
+            df = add_previous_race_count(
+                df,
+                col_map['greyhound'],
+                group_col='clean_distance'
+            )
+            df = calculate_average_position(
+                df,
+                col_map['greyhound'],
+                'clean_position',
+                group_col='clean_distance',
                 lookback=params['feature_engineering']['distance_analysis']['lookback']
             )
-            df = calculate_preferred_distance(
+            df = calculate_win_rate(
                 df,
                 col_map['greyhound'],
-                min_races=params['feature_engineering']['distance_analysis']['min_races']
+                'clean_position',  # Use cleaned position column
+                group_col='clean_distance',
+                lookback=params['feature_engineering']['distance_analysis']['lookback']
             )
+            # df = calculate_preferred_distance( #!!! I Dont know what this is doing
+                # df,
+                # col_map['greyhound'],
+                # min_races=params['feature_engineering']['distance_analysis']['min_races']
+            # )
     
     return df
 

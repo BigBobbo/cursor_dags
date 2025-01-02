@@ -1,40 +1,57 @@
 import pandas as pd
 
-def add_previous_race_count(df: pd.DataFrame, dog_col: str) -> pd.DataFrame:
+def add_previous_race_count(df: pd.DataFrame, dog_col: str, 
+                          group_col: str = None) -> pd.DataFrame:
     """
-    Adds a new column 'previous_race' to the DataFrame, indicating the number of races 
-    each dog has participated in prior to the current race.
-
-    Args:
-        df (pd.DataFrame): The input DataFrame containing race data
-        dog_col (str): The name of the column containing the dog's name
-
-    Returns:
-        pd.DataFrame: DataFrame with added 'previous_race' column
+    Adds a new column 'previous_race[_group_col]' to the DataFrame.
+    Example: 'previous_race_by_distance' if group_col is 'clean_distance'
     """
     df = df.sort_values(by=[dog_col, 'clean_date'])
+    
+    # Create grouping based on whether group_col is provided
+    grouping = [dog_col] if group_col is None else [dog_col, group_col]
+    
+    # Create output column name
+    output_col = 'previous_race' if group_col is None else f'previous_race_by_{group_col}'
+    
     # Subtract 1 to get count of previous races only
-    df['previous_race'] = df.groupby(dog_col).cumcount() - 1
+    df[output_col] = df.groupby(grouping).cumcount() - 1
     return df
 
 def add_previous_grade_race_count(df: pd.DataFrame, dog_col: str, 
-                                grade_col: str, output_col: str) -> pd.DataFrame:
+                                grade_col: str, output_col: str,
+                                group_col: str = None) -> pd.DataFrame:
     """
-    Adds a new column indicating the number of races each dog has participated 
-    in with the same grade prior to the current race.
+    Adds a column counting races in same grade, optionally grouped by another column.
+    Example: 'previous_grade_race_count_by_distance' if group_col is 'clean_distance'
     """
     df = df.sort_values(by=[dog_col, 'clean_date'])
+    
+    # Create grouping based on whether group_col is provided
+    grouping = [dog_col, grade_col] if group_col is None else [dog_col, grade_col, group_col]
+    
+    # Create output column name
+    final_output_col = output_col if group_col is None else f'{output_col}_by_{group_col}'
+    
     # Subtract 1 to get count of previous races only
-    df[output_col] = df.groupby([dog_col, grade_col]).cumcount() - 1
+    df[final_output_col] = df.groupby(grouping).cumcount() - 1
     return df
 
 def calculate_win_rate(df: pd.DataFrame, dog_col: str, 
-                      position_col: str, lookback: int = None) -> pd.DataFrame:
+                      position_col: str, lookback: int = None,
+                      group_col: str = None) -> pd.DataFrame:
     """
-    Calculates the historical win rate for each dog up to (but not including) each race.
+    Calculates win rate, optionally grouped by another column.
+    Example: 'win_rate_by_distance' if group_col is 'clean_distance'
     """
     df = df.copy()
     df = df.sort_values(by=[dog_col, 'clean_date'])
+    
+    # Create grouping based on whether group_col is provided
+    grouping = [dog_col] if group_col is None else [dog_col, group_col]
+    
+    # Create output column name
+    output_col = 'win_rate' if group_col is None else f'win_rate_by_{group_col}'
     
     # Create is_win column first, handling None/NaN values
     df['is_win'] = pd.Series(
@@ -43,42 +60,44 @@ def calculate_win_rate(df: pd.DataFrame, dog_col: str,
     ).astype(float)
     
     if lookback:
-        df['win_rate'] = (df.groupby(dog_col)['is_win']
+        df[output_col] = (df.groupby(grouping)['is_win']
                          .shift()
                          .rolling(window=lookback, min_periods=1)
-                         .mean()
-                         .fillna(0))
+                         .mean())
     else:
-        df['win_rate'] = (df.groupby(dog_col)['is_win']
+        df[output_col] = (df.groupby(grouping)['is_win']
                          .shift()
                          .expanding()
-                         .mean()
-                         .fillna(0))
+                         .mean())
     
     df = df.drop('is_win', axis=1)
-    
     return df
 
 def calculate_average_position(df: pd.DataFrame, dog_col: str, 
-                             position_col: str, lookback: int = None) -> pd.DataFrame:
+                             position_col: str, lookback: int = None,
+                             group_col: str = None) -> pd.DataFrame:
     """
-    Calculates the historical average finishing position for each dog up to 
-    (but not including) each race.
+    Calculates average position, optionally grouped by another column.
+    Example: 'avg_position_by_distance' if group_col is 'clean_distance'
     """
     df = df.sort_values(by=[dog_col, 'clean_date'])
     
+    # Create grouping based on whether group_col is provided
+    grouping = [dog_col] if group_col is None else [dog_col, group_col]
+    
+    # Create output column name
+    output_col = 'avg_position' if group_col is None else f'avg_position_by_{group_col}'
+    
     if lookback:
-        df['avg_position'] = (df.groupby(dog_col)[position_col]
-                            .shift()  # Shift to exclude current race
-                            .rolling(window=lookback, min_periods=1)
-                            .mean()
-                            .fillna(0))  # Fill first race with 0
+        df[output_col] = (df.groupby(grouping)[position_col]
+                         .shift()  # Shift to exclude current race
+                         .rolling(window=lookback, min_periods=1)
+                         .mean())
     else:
-        df['avg_position'] = (df.groupby(dog_col)[position_col]
-                            .shift()  # Shift to exclude current race
-                            .expanding()
-                            .mean()
-                            .fillna(0))  # Fill first race with 0
+        df[output_col] = (df.groupby(grouping)[position_col]
+                         .shift()  # Shift to exclude current race
+                         .expanding()
+                         .mean())
     
     return df
 
