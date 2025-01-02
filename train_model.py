@@ -30,8 +30,21 @@ def load_data(data_dir: Path, config: Dict[str, Any], is_training: bool = True) 
     features = pd.read_csv(data_dir / 'features.csv')
     target = pd.read_csv(data_dir / 'target.csv')
     
+    # Filter features based on approved features list
+    approved_features = config.get('features', [])
+    if not approved_features:
+        raise ValueError("No approved features found in config file")
+    
+    missing_features = [f for f in approved_features if f not in features.columns]
+    if missing_features:
+        raise ValueError(f"Following approved features are missing from data: {missing_features}")
+    
+    # Keep only approved features
+    features = features[approved_features]
+    
     # Log initial data info
     logging.info(f"Loaded {len(features)} samples with {len(features.columns)} features")
+    logging.info(f"Using approved features: {', '.join(approved_features)}")
     logging.info(f"Number of unique races: {target['race_id'].nunique()}")
     
     # Check for inf and nan values
