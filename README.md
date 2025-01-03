@@ -23,28 +23,19 @@ pip install pandas numpy scikit-learn xgboost pyyaml
 ### 1. Process Raw Race Data
 
 bash
+```
 python process_race_data.py input_races.csv processing_parameters.yaml processed_races.csv
-
+```
 This script:
 - Cleans and standardizes raw race data
 - Engineers features based on historical performance
 - Uses parameters defined in `processing_parameters.yaml`
 
 ### 2. Prepare Data for Machine Learning
-
 bash
+```
 python prepare_ml_data.py processed_races.csv --output-dir ml_data --features-file approved_features.yaml
-
-
-This script:
-- Filters features based on `approved_features.yaml`
-- Splits data into features and target variables
-- Creates train/test datasets
-- Saves prepared data to the specified output directory
-
-### 3. Train the Model
-
-
+```
 This script:
 - Filters features based on `approved_features.yaml`
 - Splits data into features and target variables
@@ -53,8 +44,9 @@ This script:
 
 ### 3. Train the Model
 bash
+```
 python train_model.py --data-dir ml_data --config approved_features.yaml --output-dir models
-
+```
 This script:
 - Loads prepared ML data
 - Performs hyperparameter tuning using RandomizedSearchCV
@@ -64,9 +56,9 @@ This script:
 ### 4. Prepare Future Races
 
 bash
+```
 python prepare_future_races.py historical_races.csv future_races.csv prepared_future_races.csv
-
-
+```
 This script:
 - Processes upcoming race data
 - Engineers features using historical data
@@ -131,3 +123,10 @@ Provides functions for:
 ## License
 
 [Add your license information here]
+
+## TODO
+[] Complete one training run based on Colab notebook
+[] Add a script to run the model on a new race or validate the existing one
+[] update the target function to use rase level targets
+[] Validate the current data set
+[] Restructure where the ml data is stored for ease of recordkeeping
