@@ -113,9 +113,12 @@ def create_parameter_grid(config: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'n_estimators': randint(hp['n_estimators']['min'], hp['n_estimators']['max']),
         'max_depth': randint(hp['max_depth']['min'], hp['max_depth']['max']),
-        'learning_rate': uniform(hp['learning_rate']['min'], hp['learning_rate']['max']),
-        'subsample': uniform(hp['subsample']['min'], hp['subsample']['max']),
-        'colsample_bytree': uniform(hp['colsample_bytree']['min'], hp['colsample_bytree']['max']),
+        'learning_rate': uniform(hp['learning_rate']['min'], 
+                               hp['learning_rate']['max'] - hp['learning_rate']['min']),
+        'subsample': uniform(hp['subsample']['min'], 
+                           hp['subsample']['max'] - hp['subsample']['min']),
+        'colsample_bytree': uniform(hp['colsample_bytree']['min'], 
+                                  hp['colsample_bytree']['max'] - hp['colsample_bytree']['min']),
         'min_child_weight': randint(hp['min_child_weight']['min'], hp['min_child_weight']['max'])
     }
 
