@@ -196,7 +196,7 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
     # Create parameter grid
     param_grid = create_parameter_grid(config)
     
-    # Create RandomizedSearchCV
+    # Create RandomizedSearchCV with additional parameters
     search = RandomizedSearchCV(
         model,
         param_grid,
@@ -205,7 +205,10 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
         n_jobs=config['search']['n_jobs'],
         verbose=2,
         random_state=config['training']['random_seed'],
-        scoring='neg_mean_squared_error'
+        scoring='neg_mean_squared_error',
+        pre_dispatch='2*n_jobs',
+        error_score='raise',
+        return_train_score=False
     )
     
     # Handle missing values in target variable
