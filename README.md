@@ -8,8 +8,10 @@ This system processes historical greyhound race data and trains machine learning
 - Required packages: pandas, numpy, scikit-learn, xgboost, pyyaml
 
 Install dependencies:
+```
 bash
 pip install pandas numpy scikit-learn xgboost pyyaml
+```
 
 ## Pipeline Overview
 
@@ -125,8 +127,8 @@ Provides functions for:
 [Add your license information here]
 
 ## TODO
-[] Complete one training run based on Colab notebook
-[] Add a script to run the model on a new race or validate the existing one
-[] update the target function to use rase level targets
-[] Validate the current data set
-[] Restructure where the ml data is stored for ease of recordkeeping
+- []] Complete one training run based on Colab notebook
+- [] Add a script to run the model on a new race or validate the existing one
+- [] update the target function to use rase level targets
+- [] Validate the current data set
+- [] Restructure where the ml data is stored for ease of recordkeeping
