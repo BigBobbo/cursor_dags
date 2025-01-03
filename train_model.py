@@ -25,7 +25,7 @@ def setup_logging(output_dir: Path) -> None:
         ]
     )
 
-def load_data(data_dir: Path, config: Dict[str, Any], is_training: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_training: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Load features and target data"""
     features = pd.read_csv(data_dir / 'features.csv')
     target = pd.read_csv(data_dir / 'target.csv')
@@ -73,7 +73,7 @@ def load_data(data_dir: Path, config: Dict[str, Any], is_training: bool = True) 
         config['feature_medians'] = median_values
         
         # Save updated config
-        with open(Path(config_file), 'w') as f:
+        with open(config_file, 'w') as f:
             yaml.dump(config, f, default_flow_style=False)
     else:
         # Use stored median values during prediction
@@ -140,6 +140,7 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
     """Main training function"""
     # Setup paths
     data_path = Path(data_dir)
+    config_path = Path(config_file)
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -147,11 +148,11 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
     setup_logging(output_path)
     
     # Load configuration
-    config = load_config(Path(config_file))
+    config = load_config(config_path)
     logging.info("Configuration loaded")
     
-    # Load data with config
-    features_df, target_df = load_data(data_path, config, is_training=True)
+    # Load data with config and config_file path
+    features_df, target_df = load_data(data_path, config, config_path, is_training=True)
     
     # Validate data
     if features_df.empty:
@@ -205,6 +206,7 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
     )
     
     # Handle missing values in target variable
+    groups = None  # Initialize groups variable
     if 'target' in config:
         missing_value = config['target'].get('missing_value', '-')
         missing_strategy = config['target'].get('missing_strategy', 'drop')
@@ -218,15 +220,20 @@ def train_model(data_dir: str, config_file: str, output_dir: str):
             # Filter both X and y
             X_train = X_train.loc[valid_indices]
             y_train = y_train.loc[valid_indices]
-            if groups is not None:
-                groups = groups.loc[valid_indices]
+            
+            # If using race_id groups, update them as well
+            if config['training']['cv_strategy'] == 'random_races':
+                groups = target_df.loc[X_train.index, 'race_id']
+                
         elif missing_strategy == 'fill' and config['target'].get('fill_value') is not None:
             y_train = y_train.fillna(config['target']['fill_value'])
     
     # Fit model
     logging.info("Starting model training...")
     if config['training']['cv_strategy'] == 'random_races':
-        search.fit(X_train, y_train, groups=target_df.loc[X_train.index, 'race_id'])
+        if groups is None:  # If groups wasn't set in missing value handling
+            groups = target_df.loc[X_train.index, 'race_id']
+        search.fit(X_train, y_train, groups=groups)
     else:
         search.fit(X_train, y_train)
     

@@ -83,13 +83,19 @@ def filter_ml_features(df: pd.DataFrame, approved_features_file: str = 'approved
     return df_filtered, available_features
 
 def save_ml_data(df: pd.DataFrame, target_col: str = 'est_time', 
-                output_dir: str = 'ml_data') -> None:
+                output_dir: str = 'ml_data', features_file: str = 'approved_features.yaml') -> None:
     """
     Prepare and save ML data files:
     - features.csv: Feature matrix
     - target.csv: Target values
     - feature_columns.yaml: List of feature columns for future use
     - identifiers.csv: race_id and unique_id columns
+    
+    Args:
+        df (pd.DataFrame): Input DataFrame
+        target_col (str): Name of target column
+        output_dir (str): Directory to save output files
+        features_file (str): Path to YAML file containing approved features list
     """
     # Create output directory
     output_path = Path(output_dir)
@@ -106,7 +112,7 @@ def save_ml_data(df: pd.DataFrame, target_col: str = 'est_time',
     target = df[['unique_id', 'race_id', 'clean_position', target_col]]
     
     # Filter features
-    features, feature_columns = filter_ml_features(df)
+    features, feature_columns = filter_ml_features(df, features_file)
     
     # Save identifiers
     identifiers = df[['unique_id', 'race_id']]
@@ -133,6 +139,8 @@ def main():
                        help='Directory to save ML data files')
     parser.add_argument('--target-col', type=str, default='est_time',
                        help='Name of target column')
+    parser.add_argument('--features-file', type=str, default='approved_features.yaml',
+                       help='Path to YAML file containing approved features list')
     
     args = parser.parse_args()
     
@@ -144,7 +152,7 @@ def main():
     df = pd.read_csv(args.input_file)
     
     # Save ML data
-    save_ml_data(df, args.target_col, args.output_dir)
+    save_ml_data(df, args.target_col, args.output_dir, args.features_file)
     
     logging.info("Processing complete!")
 

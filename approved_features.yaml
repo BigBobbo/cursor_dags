@@ -1,17 +1,15 @@
-# Features approved for ML model use
+feature_medians:
+  avg_position: 32.03618867467151
+  avg_position_by_clean_distance: 31.582346214650663
+  clean_weight: 68.0
+  weight_change_pct: 0.0
+  weight_dev_from_avg: 0.26884339949577196
+  win_rate: 0.0114622385517968
+  win_rate_by_clean_distance: 0.0117779614702181
 features:
-# track,race_name,pos,
-- trap
-# greyhound,sire_name,dam_name,prize,wt,win_time,by,going,est_time,sp,grade,comm,
-# - clean_date
-- clean_grade
-# - clean_position
 - clean_weight
 - clean_distance
-# clean_going,
-# - clean_est_time,
 - race_number
-- race_grade
 - previous_race
 - previous_same_dog_grade_count
 - previous_same_race_grade_count
@@ -24,58 +22,35 @@ features:
 - previous_race_by_clean_distance
 - avg_position_by_clean_distance
 - win_rate_by_clean_distance
-
-
-# Feature median values for filling NaNs
-feature_medians:
-  clean_weight: 65.5
-  previous_race: 2.0
-  weight_change: -0.5
-  # ... other medians will be added here automatically ...
-
-# Add new section for target variable handling
-target:
-  missing_value: '-'
-  missing_strategy: 'drop'  # Options: 'drop' or 'fill'
-  fill_value: null  # Only used if missing_strategy is 'fill'
-
-# Model training parameters
-training:
-  # Cross-validation strategy (random, random_races, chronological)
-  cv_strategy: random_races
-  
-  # Number of folds for cross-validation
-  n_folds: 5
-  
-  # Test set size (proportion of data)
-  test_size: 0.2
-  
-  # Random seed for reproducibility
-  random_seed: 42
-
-# XGBoost hyperparameter search space
 hyperparameters:
-  n_estimators:
-    min: 100
-    max: 1000
-  max_depth:
-    min: 3
-    max: 10
-  learning_rate:
-    min: 0.01
-    max: 0.3
-  subsample:
-    min: 0.5
-    max: 1.0
   colsample_bytree:
-    min: 0.5
     max: 1.0
+    min: 0.5
+  learning_rate:
+    max: 0.3
+    min: 0.01
+  max_depth:
+    max: 10
+    min: 3
   min_child_weight:
-    min: 1
     max: 7
-
-# RandomizedSearchCV parameters
+    min: 1
+  n_estimators:
+    max: 1000
+    min: 100
+  subsample:
+    max: 1.0
+    min: 0.5
 search:
-  n_iter: 100  # Number of parameter combinations to try
-  cv: 5        # Number of cross-validation folds
-  n_jobs: -1   # Number of parallel jobs (-1 means use all processors) 
+  cv: 5
+  n_iter: 100
+  n_jobs: -1
+target:
+  fill_value: null
+  missing_strategy: drop
+  missing_value: '-'
+training:
+  cv_strategy: random_races
+  n_folds: 5
+  random_seed: 42
+  test_size: 0.2
