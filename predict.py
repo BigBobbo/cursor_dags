@@ -53,7 +53,7 @@ def make_predictions(model, features_df: pd.DataFrame) -> pd.Series:
         logging.error(f"Error making predictions: {str(e)}")
         raise
 
-def save_results(identifier_df: pd.DataFrame, predictions: pd.Series, output_path: str):
+def save_results(identifier_df: pd.DataFrame, predictions: pd.Series, output_path: str, model_path: str):
     """Save results by joining predictions with identifier data and add rankings"""
     logging.info("Joining predictions with identifier data...")
     
@@ -65,9 +65,12 @@ def save_results(identifier_df: pd.DataFrame, predictions: pd.Series, output_pat
     logging.info("Calculating rankings per race...")
     results_df['predicted_rank'] = results_df.groupby('race_id')['predicted_time'].rank(method='min')
     
-    # Save to file
+    # Get model name from path
+    model_name = Path(model_path).stem
+    
+    # Create output filename with both suffixes
     output_path = Path(output_path)
-    output_file = output_path.parent / f"{output_path.stem}_results{output_path.suffix}"
+    output_file = output_path.parent / f"{output_path.stem}_results_{model_name}{output_path.suffix}"
     
     logging.info(f"Saving results to {output_file}")
     results_df.to_csv(output_file, index=False)
@@ -97,7 +100,7 @@ def main():
         predictions = make_predictions(model, features_df)
         
         # Save results
-        save_results(identifier_df, predictions, args.identifier)
+        save_results(identifier_df, predictions, args.identifier, args.model)
         
         logging.info("Prediction process completed successfully!")
         
