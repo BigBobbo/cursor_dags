@@ -54,12 +54,16 @@ def make_predictions(model, features_df: pd.DataFrame) -> pd.Series:
         raise
 
 def save_results(identifier_df: pd.DataFrame, predictions: pd.Series, output_path: str):
-    """Save results by joining predictions with identifier data"""
+    """Save results by joining predictions with identifier data and add rankings"""
     logging.info("Joining predictions with identifier data...")
     
     # Add predictions to identifier DataFrame
     results_df = identifier_df.copy()
     results_df['predicted_time'] = predictions
+    
+    # Add rankings per race_id
+    logging.info("Calculating rankings per race...")
+    results_df['predicted_rank'] = results_df.groupby('race_id')['predicted_time'].rank(method='min')
     
     # Save to file
     output_path = Path(output_path)
