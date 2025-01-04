@@ -30,6 +30,23 @@ def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_trai
     features = pd.read_csv(data_dir / 'features.csv')
     target = pd.read_csv(data_dir / 'target.csv')
     
+     # Handle missing values in target
+    if 'target' in config:
+        missing_value = config['target'].get('missing_value', '-')
+        missing_strategy = config['target'].get('missing_strategy', 'drop')
+        
+        # Replace missing value with NaN
+        target['est_time'] = target['est_time'].replace(missing_value, np.nan)
+        
+        if missing_strategy == 'drop':
+            # Get indices of valid target values
+            valid_indices = target[~target['est_time'].isna()].index
+            # Filter both features and target
+            features = features.loc[valid_indices]
+            target = target.loc[valid_indices]
+        elif missing_strategy == 'fill' and config['target'].get('fill_value') is not None:
+            target['est_time'] = target['est_time'].fillna(config['target']['fill_value'])
+            
     # Filter features based on approved features list
     approved_features = config.get('features', [])
     if not approved_features:
