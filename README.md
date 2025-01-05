@@ -132,5 +132,6 @@ Provides functions for:
 - [ ] update the target function to use rase level targets
 - [ ] Validate the current data set
 - [ ] Restructure where the ml data is stored for ease of recordkeeping
-- [ ] Add identifiers for the model predictions
 - [ ] Clean position has some values 10x the actual position
+- [ ] Grade appears to be info on the race just ran, should not be used for future races
+- [ ] Trap is not part of the future data, shoudl add
