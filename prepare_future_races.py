@@ -19,7 +19,8 @@ from race_helper_functions import (
 from data_cleaning_functions import (
     clean_date_column,
     clean_weight_column,
-    clean_race_distance
+    clean_race_distance,
+    clean_grade_column
 )
 
 def setup_logging():
@@ -38,73 +39,104 @@ def prepare_future_races(historical_df: pd.DataFrame, future_df: pd.DataFrame) -
     # Clean the historical data dates
     historical_df = clean_date_column(historical_df, 'date')
     
-    # Clean the future race data
+    # Clean and standardize the future race data
     future_df = clean_date_column(future_df, 'date')
     future_df = clean_weight_column(future_df, 'weight')
     future_df = clean_race_distance(future_df, 'race_name')
+    future_df = clean_grade_column(future_df, 'grade')
     
-    # Rename future weight column to match historical
-    future_df = future_df.rename(columns={'clean_weight': 'clean_weight'})
+    # Extract race number from race name for future races
+    future_df['race_number'] = future_df['race_name'].str.extract(r'Race\s+(\d+)').astype(int)
     
     # Create a combined DataFrame for feature creation
     combined_df = pd.concat([
         historical_df,
-        future_df.assign(clean_position=None)
+        future_df.assign(clean_position=None)  # Add null position for future races
     ]).sort_values('clean_date')
     
     logging.info("Calculating historical features...")
-    
-    # Calculate weight-related features first
-    if combined_df['clean_weight'].notna().any():
-        combined_df = calculate_weight_change(combined_df, 'greyhound')
-        combined_df = calculate_average_weight(
-            combined_df,
-            'greyhound',
-            lookback=5
-        )
     
     # Add race counts
     combined_df = add_previous_race_count(combined_df, 'greyhound')
     combined_df = add_previous_grade_race_count(
         combined_df,
         'greyhound',
-        'grade',
-        'previous_grade_race_count'
+        'clean_grade',
+        'previous_same_dog_grade_count'
+    )
+    combined_df = add_previous_grade_race_count(
+        combined_df,
+        'greyhound',
+        'race_grade',
+        'previous_same_race_grade_count'
     )
     
-    # Calculate performance metrics using only historical data
+    # Calculate performance metrics
     combined_df = calculate_win_rate(
         combined_df,
         'greyhound',
-        'clean_position',
-        lookback=5
+        'clean_position'
     )
     
     combined_df = calculate_average_position(
         combined_df,
         'greyhound',
-        'clean_position',
-        lookback=5
+        'clean_position'
     )
+    
+    # Calculate weight-related features
+    combined_df = calculate_weight_change(combined_df, 'greyhound')
+    combined_df = calculate_average_weight(combined_df, 'greyhound')
     
     # Calculate distance-related features
     if combined_df['clean_distance'].notna().any():
-        combined_df = calculate_distance_performance(
+        combined_df = add_previous_race_count(
             combined_df,
             'greyhound',
-            lookback=5
+            group_col='clean_distance'
         )
-        combined_df = calculate_preferred_distance(
+        combined_df = calculate_average_position(
             combined_df,
             'greyhound',
-            min_races=3
+            'clean_position',
+            group_col='clean_distance'
+        )
+        combined_df = calculate_win_rate(
+            combined_df,
+            'greyhound',
+            'clean_position',
+            group_col='clean_distance'
         )
     
     # Extract only the future races with their calculated features
     future_races_with_features = combined_df[combined_df['clean_date'].isin(future_df['clean_date'])]
     
-    logging.info("Feature creation complete!")
+    # Ensure all required features are present
+    required_features = [
+        'clean_weight',
+        'clean_distance',
+        'race_number',
+        'previous_race',
+        'previous_same_dog_grade_count',
+        'previous_same_race_grade_count',
+        'win_rate',
+        'avg_position',
+        'weight_change',
+        'weight_change_pct',
+        'avg_weight',
+        'weight_dev_from_avg',
+        'previous_race_by_clean_distance',
+        'avg_position_by_clean_distance',
+        'win_rate_by_clean_distance'
+    ]
     
+    # Fill missing features with appropriate default values
+    for feature in required_features:
+        if feature not in future_races_with_features.columns:
+            logging.warning(f"Missing feature {feature}, filling with 0")
+            future_races_with_features[feature] = 0
+    
+    logging.info("Feature creation complete!")
     return future_races_with_features
 
 def main():
