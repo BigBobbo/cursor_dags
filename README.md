@@ -127,11 +127,10 @@ Provides functions for:
 [Add your license information here]
 
 ## TODO
-- [ ] Complete one training run based on Colab notebook
-- [ ] Add a script to run the model on a new race or validate the existing one
 - [ ] update the target function to use rase level targets
 - [ ] Validate the current data set
 - [ ] Restructure where the ml data is stored for ease of recordkeeping
 - [ ] Clean position has some values 10x the actual position
 - [ ] Grade appears to be info on the race just ran, should not be used for future races
-- [ ] Trap is not part of the future data, shoudl add
+- [ ] Trap is not part of the future data, should add
+- [ ] Add model diagnostics
