@@ -30,7 +30,7 @@ def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_trai
     features = pd.read_csv(data_dir / 'features.csv')
     target = pd.read_csv(data_dir / 'target.csv')
     
-     # Handle missing values in target
+    # Handle missing values in target
     if 'target' in config:
         missing_value = config['target'].get('missing_value', '-')
         missing_strategy = config['target'].get('missing_strategy', 'drop')
@@ -39,14 +39,12 @@ def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_trai
         target['est_time'] = target['est_time'].replace(missing_value, np.nan)
         
         if missing_strategy == 'drop':
-            # Get indices of valid target values
             valid_indices = target[~target['est_time'].isna()].index
-            # Filter both features and target
             features = features.loc[valid_indices]
             target = target.loc[valid_indices]
         elif missing_strategy == 'fill' and config['target'].get('fill_value') is not None:
             target['est_time'] = target['est_time'].fillna(config['target']['fill_value'])
-            
+    
     # Filter features based on approved features list
     approved_features = config.get('features', [])
     if not approved_features:
@@ -82,7 +80,9 @@ def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_trai
         for col in features.columns:
             if features[col].isna().any():
                 median_val = features[col].median()
-                median_values[col] = float(median_val)  # Convert to float for YAML serialization
+                if pd.isna(median_val):  # Handle columns with all NaN values
+                    median_val = 0.0
+                median_values[col] = float(median_val)
                 features[col] = features[col].fillna(median_val)
                 logging.info(f"Filled NaN values in {col} with median value: {median_val}")
         
@@ -97,8 +97,10 @@ def load_data(data_dir: Path, config: Dict[str, Any], config_file: Path, is_trai
         if 'feature_medians' not in config:
             raise ValueError("No stored median values found in config file")
         
-        for col, median_val in config['feature_medians'].items():
-            if col in features.columns:
+        # Fill any remaining NaN values with 0.0 if no median value exists
+        for col in features.columns:
+            if features[col].isna().any():
+                median_val = config['feature_medians'].get(col, 0.0)
                 features[col] = features[col].fillna(median_val)
                 logging.info(f"Filled NaN values in {col} with stored median value: {median_val}")
     

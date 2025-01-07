@@ -6,6 +6,8 @@ feature_medians:
   weight_dev_from_avg: 0.26884339949577196
   win_rate: 0.0114622385517968
   win_rate_by_clean_distance: 0.0117779614702181
+  previous_same_dog_grade_count: 0.0
+  previous_same_race_grade_count: 0.0
 features:
 - clean_weight
 - clean_distance
