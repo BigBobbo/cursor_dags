@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import re
+import logging
 
 def clean_date_column(df: pd.DataFrame, date_col: str = 'date') -> pd.DataFrame:
     """
@@ -26,6 +27,7 @@ def clean_position_column(df: pd.DataFrame, pos_col: str = 'pos') -> pd.DataFram
     """
     Cleans the position column by removing trailing periods and converting to integer.
     Handles empty strings, invalid values, and numeric inputs by setting them to NaN.
+    Values outside the range 1-6 are logged and replaced with 6.
     
     Args:
         df (pd.DataFrame): Input DataFrame containing race data
@@ -45,6 +47,7 @@ def clean_position_column(df: pd.DataFrame, pos_col: str = 'pos') -> pd.DataFram
     
     # Now clean the string values
     df['clean_position'] = (df['clean_position']
+                          .str.replace('0', '', regex=False)  # Remove Trailing zeros                            
                           .str.replace('.', '', regex=False)  # Remove periods
                           .str.strip()  # Remove whitespace
                           .replace('', pd.NA)  # Replace empty strings with NA
@@ -53,6 +56,16 @@ def clean_position_column(df: pd.DataFrame, pos_col: str = 'pos') -> pd.DataFram
     
     # Convert to float first (to handle NaN values) then to Int64 (nullable integer type)
     df['clean_position'] = pd.to_numeric(df['clean_position'], errors='coerce').astype('Int64')
+    
+    # Log and replace invalid positions
+    invalid_mask = (df['clean_position'] > 6) | (df['clean_position'] < 1)
+    invalid_positions = df.loc[invalid_mask, 'clean_position']
+    
+    if len(invalid_positions) > 0:
+        logging.warning(f"Found {len(invalid_positions)} positions outside range 1-6:")
+        for idx, pos in invalid_positions.items():
+            logging.warning(f"Row {idx}: Position {pos} replaced with 6")
+        df.loc[invalid_mask, 'clean_position'] = 6
     
     return df
 

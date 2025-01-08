@@ -127,10 +127,11 @@ Provides functions for:
 [Add your license information here]
 
 ## TODO
-- [ ] update the target function to use rase level targets
+- [ ] update the target function to use race level targets
 - [ ] Validate the current data set
 - [ ] Restructure where the ml data is stored for ease of recordkeeping
 - [ ] Clean position has some values 10x the actual position
 - [ ] Grade appears to be info on the race just ran, should not be used for future races
 - [ ] Trap is not part of the future data, should add
 - [ ] Add model diagnostics
+- [ ] Create list of features to add and share
